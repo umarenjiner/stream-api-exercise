@@ -67,11 +67,17 @@ public class StreamApiTest {
     public void exercise2() {
         List<Order> expected = solution2();
         // hamma orderlar
-        List<Order> orders = orderRepo.findAll();
+        List<Order> orders = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getProducts()
+                        .stream().
+                        anyMatch(product -> product.getCategory().equalsIgnoreCase("Baby")))
+                .collect(Collectors.toList());
         //yordam 1: har bitta zakaz o'z ichiga oladigan Produktlar listini olish
         orders.forEach(order -> {
             Set<Product> products = order.getProducts();
         });
+        Assertions.assertEquals(expected,orders);
         //yordam 2: demak har bitta Orderni filter qilib, keyin har bitta
         // orderga tegishli produktlarni olib agar shu Produktni setni
         // ichidagi istalgan produktni kategorisi "Baby" bo'sa unda uni filterdan o'tqizab
@@ -89,6 +95,13 @@ public class StreamApiTest {
     @DisplayName("category = “Toys” bo'lgan produktlarni oling va narxiga 10% diskountga o'zgartiring")
     public void exercise3() {
         List<Product> expected = solution3();
+        List<Product> result = productRepo.findAll()
+                .stream()
+                .filter(product -> product.getCategory().equalsIgnoreCase("Toys"))
+                .map(product -> product.withPrice(product.getPrice()*0.9))
+                .collect(Collectors.toList());
+        Assertions.assertEquals(expected,result);
+
 //         yordam: filter qilgandan song yangi produkt oching, chunki 10% diskount bilan
 //        produkt qaytarilishi kerak
 //        List<Product> yourSolution = productRepo.findAll().stream().filter()...
@@ -105,6 +118,14 @@ public class StreamApiTest {
             "Orderlarni chiqaring")
     public void exercise4_1() {
         List<Order> expected = solution4_1();
+        List<Order> result4_1 = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getCustomer().getTier() == 2)
+                .filter(order -> order.getOrderDate().isAfter(LocalDate.of(2021,2,1)))
+                .filter(order -> order.getOrderDate().isBefore(LocalDate.of(2021,4,1)))
+                .collect(Collectors.toList());
+        Assertions.assertEquals(expected,result4_1);
+
         // yordam:
         // shu oraliqdagi zakazlarni olib
         // zakaz qilgan customerni tier boyicha filter qilib
