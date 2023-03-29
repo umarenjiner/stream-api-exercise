@@ -88,6 +88,7 @@ public class StreamApiTest {
 //         pastdagi qator kommentdan ochilsin va method run qilinsin
 //         yourSolution list yaratilgandan keyin
 //        Assertions.assertEquals(expected, yourSolution);
+
     }
 
     //2 chi vazifa
