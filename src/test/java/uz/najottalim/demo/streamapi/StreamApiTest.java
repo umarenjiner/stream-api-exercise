@@ -1,5 +1,6 @@
 package uz.najottalim.demo.streamapi;
 
+import java.beans.FeatureDescriptor;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.*;
@@ -70,24 +71,24 @@ public class StreamApiTest {
         List<Order> orders = orderRepo.findAll()
                 .stream()
                 .filter(order -> order.getProducts()
-                        .stream().
-                        anyMatch(product -> product.getCategory().equalsIgnoreCase("Baby")))
+                        .stream()
+                        .anyMatch(product -> product.getCategory().equalsIgnoreCase("Baby")))
                 .collect(Collectors.toList());
         //yordam 1: har bitta zakaz o'z ichiga oladigan Produktlar listini olish
         orders.forEach(order -> {
             Set<Product> products = order.getProducts();
         });
         Assertions.assertEquals(expected,orders);
-        //yordam 2: demak har bitta Orderni filter qilib, keyin har bitta
+        // yordam 2: demak har bitta Orderni filter qilib, keyin har bitta
         // orderga tegishli produktlarni olib agar shu Produktni setni
         // ichidagi istalgan produktni kategorisi "Baby" bo'sa unda uni filterdan o'tqizab
         // qolganlarini tashlab yuborish kerak
-//        List<Order> yourSolution = orderRepo.findAll().stream().filter() ...
+        // List<Order> yourSolution = orderRepo.findAll().stream().filter() ...
 
 
-//         pastdagi qator kommentdan ochilsin va method run qilinsin
+//         pastdagi qator kommentdan ochilsin va method run qilinsi
 //         yourSolution list yaratilgandan keyin
-//        Assertions.assertEquals(expected, yourSolution);
+//         Assertions.assertEquals(expected, yourSolution);
 
     }
 
@@ -132,13 +133,18 @@ public class StreamApiTest {
         // zakaz qilgan customerni tier boyicha filter qilib
         // chiqarish kerak
     }
-
     //4 chi vazifa
     @Test
     @DisplayName("Statusi NEW bo'lgan orderlarni zakaz qilgan Customerlarni nomini chiqaring" +
             "Orderlarni chiqaring")
     public void exercise4_2() {
         List<String> expected = solution4_2();
+        var solution4 = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getStatus().equalsIgnoreCase("NEW"))
+                .map(order -> order.getCustomer().getName())
+                .collect(Collectors.toList());
+        Assertions.assertEquals(expected,solution4);
         // yordam:
         // birinchi filter keyn map order.getCustomer qilib
         // customerlarni olsa boladi
@@ -153,6 +159,14 @@ public class StreamApiTest {
         // yordam: birinchi shu sanadagi hamma orderni olib
         // keyn har bir orderni produktlarini listga yiging
         // keyn narximi stream average bilan hisoblang
+        var solution9 = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getOrderDate().isEqual(LocalDate.of(2021,Month.MARCH,15)))
+                .flatMap(order -> order.getProducts().stream())
+                .mapToDouble(Product::getPrice)
+                .average().getAsDouble();
+        Assertions.assertEquals(expected,solution9);
+
     }
 
     //6 chi vazifa
@@ -164,6 +178,13 @@ public class StreamApiTest {
         // yordam: birinchi shu sanadagi hamma orderni olib
         // keyn har bir orderni produktlarini listga yiging
         // keyn narximi stream sum bilan hisoblang
+        var solution8 = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getOrderDate().isBefore(LocalDate.of(2021,2,1)))
+                .filter(order -> order.getOrderDate().isAfter(LocalDate.of(2021,3,1)))
+                .flatMap(order -> order.getProducts().stream())
+                .mapToDouble(Product::getPrice).
+                sum();
     }
 
     //7 chi vazifa
@@ -174,22 +195,48 @@ public class StreamApiTest {
         DoubleSummaryStatistics expected = solution10();
         // yordam: produktni kategoriya boyicha filter qiling
         // keyn streamdan DoubleStreamga o'ting va
-        // summary statisticsni chiqaring
+        // summary statisticsni
+        var solution10 = productRepo.findAll()
+                .stream()
+                .filter(product -> product.getCategory().equalsIgnoreCase("Books"))
+                .mapToDouble(Product::getPrice)
+                .summaryStatistics();
+        System.out.println(expected);
+        System.out.println(solution10);
+       // Assertions.assertEquals(expected,solution10); ? natija bir xil !!!
     }
-
     //8 chi vazifa
     @Test
     @DisplayName("Get a list of products which was ordered on 15-Mar-2021" +
             "15-Mar-2021 zakaz qilingan produktlarni oling")
     public void exercise7() {
         List<Product> expected = solution7();
+        // ====================================1-USUL=================================
         // yordam (murakkamroq): birinchi shu sanadagi orderlarni olin
         // keyn har bir orderga tegishli produktni
         // olish kerak
+//        var solution7 = orderRepo.findAll()
+//                .stream()
+//                .filter(order -> order.getOrderDate().isEqual(LocalDate.of(2021,Month.MARCH,15)))
+//                .flatMap(order -> order.getProducts().stream())
+//                .distinct()
+//                .collect(Collectors.toList());
+//        Assertions.assertEquals(expected,solution7);
+//        System.out.println("bu solution: " + solution7);
+//        System.out.println(expected);
+//        ======================================2-USUL================================
+       Set<Product> solution = orderRepo.findAll()
+                .stream()
+                .filter(order -> order.getOrderDate().isEqual(LocalDate.of(2021,Month.MARCH,15)))
+                .flatMap(order -> order.getProducts().stream())
+                .collect(Collectors.toSet());
+        Assertions.assertEquals(expected.size(),solution.size());
+
+        for (Product product : expected) {
+            Assertions.assertTrue(solution.contains(product));
+        }
     }
-
     //9 chi vazifa
-
     @Test
     @DisplayName("xamma 2021 zakaz qilingan" +
             "zakazlarni eng kop zakaz qilgan 10 ta customerni chiqaring")
